@@ -1,5 +1,7 @@
 import csv
 import operator
+import math
+
 
 class User:
     def __init__(self, row):
@@ -87,6 +89,32 @@ class Movie:
                     new_list.append(movie)
         return sorted(new_list, key=operator.attrgetter('avgrating'), reverse=True)[:10]
 
+    def get_shared_list(user1, user2, mlist, ulist):
+        user1_movies = [item for item in ulist[user1].ratings]
+        user2_movies = [item for item in ulist[user2].ratings]
+        both_seen = [x for x in user1_movies if any(x[0]==y[0] for y in user2_movies)]
+        both_seen2 = [x for x in user2_movies if any(x[0]==y[0] for y in user1_movies)]
+        both_seen = sorted(both_seen, key=lambda tup: tup[0])
+        both_seen2 = sorted(both_seen2, key=lambda tup: tup[0])
+        both_seen = [x[1] for x in both_seen]
+        both_seen2 = [x[1] for x in both_seen2]
+        return both_seen, both_seen2
+
+    def euclid_distance(user_list1, user_list2):
+        if len(user_list1) is 0:
+            return 0
+        differences = [user_list1[idx] - user_list2[idx] for idx in range(len(user_list1))]
+        squares = [diff ** 2 for diff in differences]
+        sum_of_squares = sum(squares)
+        return 1 / (1 + math.sqrt(sum_of_squares))
+
+    def compare_two_users(mlist, ulist):
+        u1 = int(input("Please enter user 1: "))
+        u2 = int(input("Please enter user 2: "))
+        user1, user2 = Movie.get_shared_list(u1, u2, mlist, ulist)
+
+        return Movie.euclid_distance(user1, user2)
+
 
 class Rating:
     def __init__(self, row):
@@ -112,11 +140,8 @@ def main():
     user_lib = User.parse_users('ml-100k/u.user')
     Rating.parse_ratings('ml-100k/u.data', movie_lib, user_lib)
 
-    top10 = Movie.get_top_movies(movie_lib)
-    print(top10)
-
-    unseen = Movie.get_unseen_top_movies(movie_lib, user_lib)
-    print(unseen)
+    euc = Movie.compare_two_users(movie_lib, user_lib)
+    print(euc)
 
 if __name__ == "__main__":
     main()
