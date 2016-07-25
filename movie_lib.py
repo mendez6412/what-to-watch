@@ -71,12 +71,11 @@ class Movie:
         return mdict[idno].title
 
     def get_top_movies(mlist):
-        top = int(input("How many top movies do you want to see? "))
         new_list = []
         for movie in mlist.values():
             if len(movie.ratings) >= 10:
                 new_list.append(movie)
-        return sorted(new_list, key=operator.attrgetter('avgrating'), reverse=True)[:top]
+        return sorted(new_list, key=operator.attrgetter('avgrating'), reverse=True)[:10]
 
     def get_unseen_top_movies(mlist, ulist):
         user = int(input("Which user? "))
@@ -89,7 +88,7 @@ class Movie:
                     new_list.append(movie)
         return sorted(new_list, key=operator.attrgetter('avgrating'), reverse=True)[:10]
 
-    def get_shared_list(user1, user2, mlist, ulist):
+    def get_shared_list(user1, user2, ulist):
         user1_movies = [item for item in ulist[user1].ratings]
         user2_movies = [item for item in ulist[user2].ratings]
         both_seen = [x for x in user1_movies if any(x[0]==y[0] for y in user2_movies)]
@@ -108,12 +107,40 @@ class Movie:
         sum_of_squares = sum(squares)
         return 1 / (1 + math.sqrt(sum_of_squares))
 
-    def compare_two_users(mlist, ulist):
-        u1 = int(input("Please enter user 1: "))
-        u2 = int(input("Please enter user 2: "))
-        user1, user2 = Movie.get_shared_list(u1, u2, mlist, ulist)
+    def compare_two_users(u1, u2, ulist):
+        user1, user2 = Movie.get_shared_list(u1, u2, ulist)
 
         return Movie.euclid_distance(user1, user2)
+
+    def get_closest_users(ulist):
+        user = int(input("What user? "))
+        euc_list = []
+        for user_id in ulist.keys():
+            if user_id != user:
+                euc_list.append((user_id, Movie.compare_two_users(user, user_id, ulist)))
+        sim_users = sorted(euc_list, key=lambda tup: tup[1], reverse=True)[:5]
+        sim_users = [item[0] for item in sim_users]
+        return user, sim_users
+
+    def get_sim_user_movies(user, euc_list, ulist, mlist):
+        print("User:", user)
+        user_ratings = ulist[user].ratings
+        seen_list = [item[0] for item in user_ratings]
+        print("Length Seen:", len(seen_list))
+        print("Seen:", seen_list)
+        sim_user_movies = []
+        for user in euc_list:
+            for item in ulist[user].ratings:
+                if item[0] not in seen_list:
+                    sim_user_movies.append(item)
+        sim_user_movies = sorted(sim_user_movies, key=lambda tup: tup[1], reverse=True)
+        return sim_user_movies[:10]
+
+    def get_suggested_titles(suggested, mlib):
+        final = []
+        for item in suggested:
+            final.append(mlib[item[0]].title)
+        return final
 
 
 class Rating:
@@ -130,7 +157,9 @@ class Rating:
         with open(datafile) as f:
             reader = csv.reader(f, delimiter='\t')
             print('------')
+            counter = 0
             for row in reader:
+                counter += 1
                 movie_lib[int(row[1])].append_ratings(int(row[2]))
                 user_lib[int(row[0])].append_ratings((int(row[1]), int(row[2])))
 
@@ -140,8 +169,17 @@ def main():
     user_lib = User.parse_users('ml-100k/u.user')
     Rating.parse_ratings('ml-100k/u.data', movie_lib, user_lib)
 
-    euc = Movie.compare_two_users(movie_lib, user_lib)
-    print(euc)
+    print(len(user_lib[50].ratings))
+
+    print(Movie.get_unseen_top_movies(movie_lib, user_lib))
+
+    user, euc = Movie.get_closest_users(user_lib)
+    print(user, euc)
+    sim_movies = Movie.get_sim_user_movies(user, euc, user_lib, movie_lib)
+    print(sim_movies)
+    final = Movie.get_suggested_titles(sim_movies, movie_lib)
+    print(final)
+
 
 if __name__ == "__main__":
     main()
