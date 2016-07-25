@@ -48,7 +48,7 @@ class Movie:
         return self.title
 
     def __str__(self):
-        return self.title
+        return "{}, {}, Average Rating: {}".format(self.title, self.genres, self.avgrating)
 
     def append_ratings(self, rating):
         self.ratings.append(rating)
@@ -67,7 +67,7 @@ class Movie:
 
     """Takes ID# and movie dictionary, returns title information"""
     def find_movie(idno, mdict):
-        return mdict[idno].title
+        return mdict[idno]
 
     """Takes movie dictionary and returns top movies by rating"""
     def get_top_movies(mlist):
@@ -94,7 +94,7 @@ class Movie:
         return sorted(new_list, key=operator.attrgetter('avgrating'), reverse=True)[:10]
 
     """Gets the shared list of movies between two users"""
-    #This is a nightmare, definitely needs cleaning... just not sure how, it's
+    # This is a nightmare, definitely needs cleaning... just not sure how, it's
     # so many comprehensions
     def get_shared_list(user1, user2, ulist):
         user1_movies = [item for item in ulist[user1].ratings]
