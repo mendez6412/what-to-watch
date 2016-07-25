@@ -16,7 +16,6 @@ class User:
         with open(datafile, encoding='latin_1') as f:
             user_lib = {}
             reader = csv.reader(f, delimiter='|')
-            print('2222222')
             for row in reader:
                 user_lib[int(row[0])] = User(row)
             return user_lib
@@ -62,7 +61,6 @@ class Movie:
         with open(datafile, encoding='latin_1') as f:
             movie_lib = {}
             reader = csv.reader(f, delimiter='|')
-            print('1111111')
             for row in reader:
                 movie_lib[int(row[0])] = Movie(row)
             return movie_lib
